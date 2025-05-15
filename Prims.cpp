@@ -1,68 +1,80 @@
 #include <iostream>
+#include <queue>
 #include <climits>
 using namespace std;
 
-#define MAX 100
+const int v=10;
 
-void primMST(int graph[MAX][MAX], int V) {
-    int parent[MAX];    // Stores MST
-    int key[MAX];       // Minimum edge weights
-    bool mstSet[MAX];   // Tracks visited nodes
+void addEdge(int graph[v][v], int u, int w, int wt) {
+	graph[u][w]=wt;
+	graph[w][u]=wt;
+}
 
-    for (int i = 0; i < V; i++) {
-        key[i] = INT_MAX;
-        mstSet[i] = false;
-    }
+int findmin(int distance[v], bool visited[v]) {
+	int min=INT_MAX;
+	int pos=-1;
+	for(int i=0; i<v; i++) {
+		if(!visited[i] && distance[i]<min) {
+			min=distance[i];
+			pos=i;
+		}
+	}
+	return pos;
+}
 
-    key[0] = 0;      // Start from node 0
-    parent[0] = -1;  // No parent for start
+void Prims(int graph[v][v], int start) {
+	bool visited[v]= {false};
+	int parent[v];
+	int distance[v];
+	int total_cost=0;
 
-    for (int count = 0; count < V - 1; count++) {
-        int min = INT_MAX, u;
+	for(int i=0; i<v; i++) {
+		distance[i]=INT_MAX;
+		parent[i]=-1;
+	}
 
-        for (int v = 0; v < V; v++)
-            if (!mstSet[v] && key[v] < min) {
-                min = key[v];
-                u = v;
-            }
+	visited[start]=true;
+	distance[start]=0;
 
-        mstSet[u] = true;
+	queue<int>q;
+	q.push(start);
 
-        for (int v = 0; v < V; v++)
-            if (graph[u][v] && !mstSet[v] && graph[u][v] < key[v]) {
-                parent[v] = u;
-                key[v] = graph[u][v];
-            }
-    }
+	while(!q.empty()) {
+		int node=q.front();
+		q.pop();
 
-    cout << "\nPrim's MST:\n";
-    int totalCost = 0;
-    for (int i = 1; i < V; i++) {
-        cout << parent[i] << " - " << i << " : " << graph[i][parent[i]] << endl;
-        totalCost += graph[i][parent[i]];
-    }
-    cout << "Total Minimum Cost: " << totalCost << endl;
+		cout<<node<<" ";
+
+		for(int i=0; i<v; i++) {
+			if(graph[node][i]!=0 && graph[node][i]<distance[i] && visited[i]==false) {
+				distance[i]=graph[node][i];
+				parent[i]=node;
+			}
+		}
+		int next=findmin(distance, visited);
+		if(next != -1) {
+			cout<<parent[next]<<" - "<<next<<": "<<distance[next]<<endl;
+			total_cost += distance[next];
+			visited[next]=true;
+			q.push(next);
+		}
+	}
+	cout<<"Total cost of MST: "<<total_cost<<endl;
 }
 
 int main() {
-    int V, E;
-    int graph[MAX][MAX] = {0};
+	int graph[v][v]= {0};
+	addEdge(graph, 0, 1, 28);
+	addEdge(graph, 0, 5, 10);
+	addEdge(graph, 1, 2, 16);
+	addEdge(graph, 1, 6, 7);
+	addEdge(graph, 2, 3, 12);
+	addEdge(graph, 3, 6, 18);
+	addEdge(graph, 3, 4, 22);
+	addEdge(graph, 4, 6, 24);
+	addEdge(graph, 4, 5, 25);
 
-    cout << "Enter number of offices (vertices): ";
-    cin >> V;
+	Prims(graph, 0);
+	return 0;
 
-    cout << "Enter number of connections (edges): ";
-    cin >> E;
-
-    cout << "Enter edges (source destination cost):\n";
-    for (int i = 0; i < E; i++) {
-        int u, v, w;
-        cin >> u >> v >> w;
-        graph[u][v] = w;
-        graph[v][u] = w;
-    }
-
-    primMST(graph, V);
-
-    return 0;
 }
